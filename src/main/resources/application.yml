@@ -31,8 +31,8 @@ spring:
 
 toss:
   payments:
-    client-key: ${TOSS_CLIENT_KEY:test_ck_placeholder}
-    secret-key: ${TOSS_SECRET_KEY:test_sk_placeholder}
+    client-key: ${TOSS_CLIENT_KEY:}
+    secret-key: ${TOSS_SECRET_KEY:}
     base-url: https://api.tosspayments.com
 
 logging:
