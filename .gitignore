@@ -1,0 +1,15 @@
+# Gradle
+.gradle/
+build/
+
+# IntelliJ
+.idea/
+*.iml
+
+# 비밀 키 파일 (절대 GitHub에 올라가면 안 됨)
+*-secret.yml
+application-secret.yml
+
+# OS
+.DS_Store
+Thumbs.db

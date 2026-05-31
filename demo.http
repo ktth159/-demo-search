@@ -1,0 +1,105 @@
+### 1. 상품 등록 (Kafka 발행 → ES 인덱싱)
+POST http://localhost:8080/products
+Content-Type: application/json
+
+{
+  "name": "나이키 에어맥스",
+  "description": "경량 쿠셔닝 러닝화",
+  "price": 150000,
+  "category": "shoes"
+}
+
+###
+POST http://localhost:8080/products
+Content-Type: application/json
+
+{
+  "name": "아디다스 울트라부스트",
+  "description": "반응형 쿠셔닝 러닝화",
+  "price": 180000,
+  "category": "shoes"
+}
+
+###
+POST http://localhost:8080/products
+Content-Type: application/json
+
+{
+  "name": "나이키 드라이핏 티셔츠",
+  "description": "땀 배출 기능성 반팔",
+  "price": 45000,
+  "category": "clothing"
+}
+
+### 2. 키워드 검색 (Redis에 검색어 카운트 +1)
+GET http://localhost:8080/search?keyword=나이키
+
+###
+GET http://localhost:8080/search?keyword=러닝화
+
+###
+GET http://localhost:8080/search?keyword=나이키
+
+###
+GET http://localhost:8080/search?keyword=나이키
+
+### 3. 카테고리 검색
+GET http://localhost:8080/search/category/shoes
+
+### 4. 인기검색어 순위 (Redis ZSet)
+GET http://localhost:8080/search/rank
+
+### 5. 특정 키워드 순위
+GET http://localhost:8080/search/rank/나이키
+
+# ================================================================
+# 결제 플로우 테스트 (토스페이먼츠)
+# 순서대로 실행하세요: 6 → 7 → 8
+# ================================================================
+
+### 6. 주문 생성 (결제 전 첫 단계)
+# 응답의 orderId를 복사해서 7번 요청에 사용하세요
+POST http://localhost:8080/orders
+Content-Type: application/json
+
+{
+  "productName": "나이키 에어맥스",
+  "amount": 150000
+}
+
+### 7. 결제 승인 (토스페이먼츠 결제창 완료 후 호출)
+# paymentKey: 토스페이먼츠 결제창에서 받은 키 (테스트: 아무 문자열 입력)
+# orderId: 6번에서 받은 orderId
+# amount: 주문 금액과 반드시 일치해야 함
+POST http://localhost:8080/payments/confirm
+Content-Type: application/json
+
+{
+  "paymentKey": "test_paymentKey_임의값",
+  "orderId": "6번_응답의_orderId_붙여넣기",
+  "amount": 150000
+}
+
+### 8. 결제 취소
+# paymentKey: 7번 응답의 paymentKey
+POST http://localhost:8080/payments/test_paymentKey_임의값/cancel
+Content-Type: application/json
+
+{
+  "cancelReason": "단순 변심"
+}
+
+### 9. 주문 상태 확인
+# orderId: 6번 응답의 orderId (결제 후 PAID로 변경됐는지 확인)
+GET http://localhost:8080/orders/6번_응답의_orderId_붙여넣기
+
+### 10. 멱등성 테스트 (같은 요청 두 번 → 중복 결제 안 됨)
+# 7번과 똑같은 요청을 다시 보내보세요. 동일한 응답이 오면 성공!
+POST http://localhost:8080/payments/confirm
+Content-Type: application/json
+
+{
+  "paymentKey": "test_paymentKey_임의값",
+  "orderId": "6번_응답의_orderId_붙여넣기",
+  "amount": 150000
+}
