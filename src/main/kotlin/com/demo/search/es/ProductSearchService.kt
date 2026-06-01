@@ -65,8 +65,9 @@ class ProductSearchService(private val esOperations: ElasticsearchOperations) {
         }
 
         // Query 타입으로 명시 → Overload resolution ambiguity 해결
-        val query: Query = CriteriaQuery(criteria)
-            .apply { setPageable(PageRequest.of(page, size, sortOption)) }
+        val criteriaQuery = CriteriaQuery(criteria)
+        criteriaQuery.setPageable(PageRequest.of(page, size, sortOption))
+        val query: Query = criteriaQuery
 
         return esOperations.search(query, ProductDocument::class.java)
             .map { it.content }
