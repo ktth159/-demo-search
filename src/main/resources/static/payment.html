@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>토스페이먼츠 결제 테스트</title>
+  <style>
+    body { font-family: sans-serif; max-width: 500px; margin: 60px auto; padding: 0 20px; }
+    h2 { color: #333; }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; margin-bottom: 4px; font-weight: bold; font-size: 14px; color: #555; }
+    input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 15px; box-sizing: border-box; }
+    button { width: 100%; padding: 14px; background: #3182f6; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
+    button:hover { background: #1b64da; }
+    .result { margin-top: 20px; padding: 16px; background: #f8f9fa; border-radius: 8px; font-size: 14px; white-space: pre-wrap; display: none; }
+    .success { border-left: 4px solid #00c853; }
+    .error { border-left: 4px solid #f44336; }
+  </style>
+</head>
+<body>
+
+<h2>🛒 결제 테스트</h2>
+
+<div class="form-group">
+  <label>상품명</label>
+  <input id="productName" value="나이키 에어맥스" />
+</div>
+<div class="form-group">
+  <label>금액 (원)</label>
+  <input id="amount" type="number" value="150000" />
+</div>
+
+<button onclick="startPayment()">결제하기</button>
+
+<div class="result" id="result"></div>
+
+<!-- 토스페이먼츠 SDK -->
+<script src="https://js.tosspayments.com/v2/standard"></script>
+<script>
+  // ⚠️ 클라이언트 키를 여기에 입력하세요
+  const CLIENT_KEY = "test_ck_ALnQvDd2VJmqPlqO0nQv3Mj7X41m";
+
+  async function startPayment() {
+    const productName = document.getElementById("productName").value;
+    const amount = parseInt(document.getElementById("amount").value);
+
+    // 1. 서버에 주문 생성 요청
+    const orderRes = await fetch("/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productName, amount }),
+    });
+    const order = await orderRes.json();
+    console.log("주문 생성:", order);
+
+    // 2. 토스페이먼츠 결제창 호출
+    const tossPayments = TossPayments(CLIENT_KEY);
+    const payment = tossPayments.payment({ customerKey: "demo-user-001" });
+
+    await payment.requestPayment({
+      method: "CARD",
+      amount: { currency: "KRW", value: amount },
+      orderId: order.orderId,
+      orderName: productName,
+      successUrl: window.location.origin + "/payment/success",
+      failUrl: window.location.origin + "/payment/fail",
+    });
+  }
+</script>
+
+</body>
+</html>

@@ -76,7 +76,7 @@ Content-Type: application/json
 
 {
   "paymentKey": "test_paymentKey_임의값",
-  "orderId": "6번_응답의_orderId_붙여넣기",
+  "orderId": "696add7b-4a6a-4260-91d4-3d0477bf0d17",
   "amount": 150000
 }
 

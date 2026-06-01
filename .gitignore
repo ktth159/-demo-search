@@ -2,6 +2,9 @@
 .gradle/
 build/
 
+# IntelliJ 컴파일 산출물
+out/
+
 # IntelliJ
 .idea/
 *.iml
