@@ -15,6 +15,7 @@ class OrderController(private val orderRepository: OrderRepository) {
             orderId = UUID.randomUUID().toString(),  // 토스페이먼츠에 넘길 orderId
             productName = request.productName,
             amount = request.amount,
+            productId = request.productId,
         )
         orderRepository.save(order)
         return ResponseEntity.ok(OrderResponse.from(order))
@@ -32,6 +33,7 @@ class OrderController(private val orderRepository: OrderRepository) {
 data class CreateOrderRequest(
     val productName: String,
     val amount: Int,
+    val productId: Long? = null,   // SAGA 재고 차감용 (선택)
 )
 
 data class OrderResponse(

@@ -2,6 +2,8 @@ package com.demo.search.payment
 
 import com.demo.search.order.OrderRepository
 import com.demo.search.order.OrderStatus
+import com.demo.search.saga.PaymentCompletedEvent
+import com.demo.search.saga.SagaProducer
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -15,6 +17,7 @@ class PaymentService(
     private val webClient: WebClient,
     private val orderRepository: OrderRepository,
     private val paymentRepository: PaymentRepository,
+    private val sagaProducer: SagaProducer,
     @Value("\${toss.payments.secret-key}") private val secretKey: String,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -57,6 +60,16 @@ class PaymentService(
         // 6. 주문 상태 업데이트 PENDING → PAID
         order.status = OrderStatus.PAID
         orderRepository.save(order)
+
+        // 7. SAGA 이벤트 발행 → 재고 서비스에게 차감 요청
+        sagaProducer.sendPaymentCompleted(
+            PaymentCompletedEvent(
+                orderId = order.orderId,
+                paymentKey = payment.paymentKey,
+                productId = order.productId,
+                amount = order.amount,
+            )
+        )
 
         log.debug("결제 완료 orderId={}, paymentKey={}", request.orderId, payment.paymentKey)
         return PaymentConfirmResponse.from(payment)

@@ -10,6 +10,7 @@ class Order(
 
     val productName: String,
     val amount: Int,                // 결제 금액 (원)
+    val productId: Long? = null,    // 재고 차감 대상 상품 ID (SAGA용)
 
     @Enumerated(EnumType.STRING)
     var status: OrderStatus = OrderStatus.PENDING,

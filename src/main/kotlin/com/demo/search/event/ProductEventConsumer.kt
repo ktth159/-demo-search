@@ -24,6 +24,7 @@ class ProductEventConsumer(
             description = event.description,
             price = event.price,
             category = event.category,
+            isActive = true,
         )
         searchRepository.save(document)
         log.debug("ES 인덱싱 완료 → productId={}, name={}", event.id, event.name)

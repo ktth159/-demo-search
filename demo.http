@@ -103,3 +103,59 @@ Content-Type: application/json
   "orderId": "6번_응답의_orderId_붙여넣기",
   "amount": 150000
 }
+
+# ================================================================
+# SAGA 패턴 테스트
+# 순서: 11 → 12 → 13 → 14 (재고 부족 시나리오)
+# ================================================================
+
+### 11. 재고 등록 (productId=1, 수량=5)
+POST http://localhost:8080/stocks
+Content-Type: application/json
+
+{
+  "productId": 1,
+  "quantity": 5
+}
+
+### 12. 재고 조회
+GET http://localhost:8080/stocks/1
+
+### 13. 재고 있을 때 주문 생성 (productId 포함)
+POST http://localhost:8080/orders
+Content-Type: application/json
+
+{
+  "productName": "나이키 에어맥스",
+  "amount": 150000,
+  "productId": 1
+}
+
+### 14. 재고 소진 후 주문 → SAGA 보상 트랜잭션 확인
+# 11번에서 재고를 0으로 설정하고 결제하면 자동으로 결제 취소됨
+POST http://localhost:8080/stocks
+Content-Type: application/json
+
+{
+  "productId": 1,
+  "quantity": 0
+}
+
+# ================================================================
+# Elasticsearch 심화 검색 테스트
+# ================================================================
+
+### 15. nori 형태소 분석 검색 (러닝화 → 러닝/화 분리 후 검색)
+GET http://localhost:8080/search?keyword=러닝화
+
+### 16. 가격 범위 필터
+GET http://localhost:8080/search?keyword=나이키&minPrice=100000&maxPrice=200000
+
+### 17. 카테고리 + 낮은 가격순 정렬
+GET http://localhost:8080/search?category=shoes&sort=price_asc
+
+### 18. 높은 가격순 + 페이징
+GET http://localhost:8080/search?keyword=운동화&sort=price_desc&page=0&size=3
+
+### 19. 복합 조건 (키워드 + 카테고리 + 가격범위 + 정렬)
+GET http://localhost:8080/search?keyword=나이키&category=shoes&minPrice=50000&maxPrice=300000&sort=price_asc
