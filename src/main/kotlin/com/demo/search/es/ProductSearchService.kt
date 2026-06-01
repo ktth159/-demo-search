@@ -70,5 +70,6 @@ class ProductSearchService(private val esOperations: ElasticsearchOperations) {
 
         return esOperations.search(query, ProductDocument::class.java)
             .map(SearchHit<ProductDocument>::getContent)
+            .toList()
     }
 }
