@@ -69,7 +69,7 @@ class ProductSearchService(private val esOperations: ElasticsearchOperations) {
             .apply { setPageable(PageRequest.of(page, size, sortOption)) }
 
         return esOperations.search(query, ProductDocument::class.java)
-            .map(SearchHit<ProductDocument>::getContent)
+            .map { it.content }
             .toList()
     }
 }
