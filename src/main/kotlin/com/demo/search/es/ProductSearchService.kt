@@ -3,11 +3,11 @@ package com.demo.search.es
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
-import org.springframework.data.elasticsearch.client.elc.NativeQuery
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations
 import org.springframework.data.elasticsearch.core.SearchHit
 import org.springframework.data.elasticsearch.core.query.Criteria
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery
+import org.springframework.data.elasticsearch.core.query.Query
 import org.springframework.stereotype.Service
 
 @Service
@@ -64,8 +64,9 @@ class ProductSearchService(private val esOperations: ElasticsearchOperations) {
             else -> Sort.unsorted()  // 기본: 관련도순 (_score)
         }
 
-        val query = CriteriaQuery(criteria)
-            .setPageable(PageRequest.of(page, size, sortOption))
+        // Query 타입으로 명시 → Overload resolution ambiguity 해결
+        val query: Query = CriteriaQuery(criteria)
+            .apply { setPageable(PageRequest.of(page, size, sortOption)) }
 
         return esOperations.search(query, ProductDocument::class.java)
             .map(SearchHit<ProductDocument>::getContent)
