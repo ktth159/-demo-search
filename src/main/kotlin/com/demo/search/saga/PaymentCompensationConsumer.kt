@@ -33,14 +33,19 @@ class PaymentCompensationConsumer(
 
         try {
             // 1. 토스페이먼츠 결제 취소 API 호출
-            val encoded = Base64.getEncoder().encodeToString("$secretKey:".toByteArray())
-            webClient.post()
-                .uri("/v1/payments/${event.paymentKey}/cancel")
-                .header("Authorization", "Basic $encoded")
-                .bodyValue(mapOf("cancelReason" to event.reason))
-                .retrieve()
-                .bodyToMono<Map<String, Any>>()
-                .block()
+            //    테스트 시뮬레이션 키(mock_)는 실제 PG 호출 스킵
+            if (event.paymentKey.startsWith("mock_")) {
+                log.warn("테스트 키 감지 — 실제 PG 취소 API 스킵 paymentKey={}", event.paymentKey)
+            } else {
+                val encoded = Base64.getEncoder().encodeToString("$secretKey:".toByteArray())
+                webClient.post()
+                    .uri("/v1/payments/${event.paymentKey}/cancel")
+                    .header("Authorization", "Basic $encoded")
+                    .bodyValue(mapOf("cancelReason" to event.reason))
+                    .retrieve()
+                    .bodyToMono<Map<String, Any>>()
+                    .block()
+            }
 
             // 2. DB 결제 상태 → CANCELLED
             paymentRepository.findByOrderId(event.orderId)?.let {

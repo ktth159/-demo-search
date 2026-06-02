@@ -28,6 +28,10 @@
   <label>금액 (원)</label>
   <input id="amount" type="number" value="150000" />
 </div>
+<div class="form-group">
+  <label>상품 ID (재고 SAGA 테스트용 · 비우면 재고 차감 안 함)</label>
+  <input id="productId" type="number" placeholder="예: 1" />
+</div>
 
 <button onclick="startPayment()">결제하기</button>
 
@@ -42,12 +46,14 @@
   async function startPayment() {
     const productName = document.getElementById("productName").value;
     const amount = parseInt(document.getElementById("amount").value);
+    const productIdRaw = document.getElementById("productId").value;
+    const productId = productIdRaw ? parseInt(productIdRaw) : null;
 
-    // 1. 서버에 주문 생성 요청
+    // 1. 서버에 주문 생성 요청 (productId 포함 → SAGA 재고 차감 대상)
     const orderRes = await fetch("/orders", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ productName, amount }),
+      body: JSON.stringify({ productName, amount, productId }),
     });
     const order = await orderRes.json();
     console.log("주문 생성:", order);

@@ -35,16 +35,10 @@ class ProductSearchService(private val esOperations: ElasticsearchOperations) {
         log.debug("ES 검색 keyword={}, category={}, minPrice={}, maxPrice={}, sort={}", keyword, category, minPrice, maxPrice, sort)
 
         // Criteria 기반 쿼리 빌드
+        // 활성 상품만 (기본 필터)
         var criteria = Criteria("isActive").`is`(true)
 
-        // 키워드 검색 (name 또는 description 포함)
-        if (!keyword.isNullOrBlank()) {
-            val keywordCriteria = Criteria("name").contains(keyword)
-                .or(Criteria("description").contains(keyword))
-            criteria = criteria.and(keywordCriteria)
-        }
-
-        // 카테고리 필터
+        // 카테고리 필터 (Keyword 타입 - 정확히 일치)
         if (!category.isNullOrBlank()) {
             criteria = criteria.and(Criteria("category").`is`(category))
         }
@@ -55,6 +49,15 @@ class ProductSearchService(private val esOperations: ElasticsearchOperations) {
         }
         if (maxPrice != null) {
             criteria = criteria.and(Criteria("price").lessThanEqual(maxPrice))
+        }
+
+        // 키워드 검색: name 또는 description에 match (nori 분석 적용)
+        // subCriteria로 OR 조건을 괄호로 묶어 위 AND 필터들과 올바르게 결합
+        if (!keyword.isNullOrBlank()) {
+            criteria = criteria.subCriteria(
+                Criteria("name").matches(keyword)
+                    .or(Criteria("description").matches(keyword))
+            )
         }
 
         // 정렬
